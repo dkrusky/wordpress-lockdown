@@ -1,0 +1,75 @@
+Options -Indexes
+
+# block rpc calls
+<FilesMatch "class-wp-xmlrpc-server\.php|xmlrpc\.php">
+  Deny from all
+</Files>
+
+# enable caching of media
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/jpg "access 2 week"
+  ExpiresByType image/jpeg "access 2 week"
+  ExpiresByType image/gif "access 2 week"
+  ExpiresByType image/png "access 2 week"
+  ExpiresByType text/css "access 2 week"
+  ExpiresByType application/pdf "access 2 week"
+  ExpiresByType text/x-javascript "access 2 week"
+  ExpiresByType application/x-shockwave-flash "access 2 week"
+  ExpiresByType image/x-icon "access 2 week"
+  ExpiresDefault "access 2 week"
+</IfModule>
+
+# compress images and scripts
+<IfModule mod_gzip.c>
+  mod_gzip_on Yes
+  mod_gzip_dechunk Yes
+  mod_gzip_item_include file \.(html?|txt|css|js|pl)$
+  mod_gzip_item_include handler ^cgi-script$
+  mod_gzip_item_include mime ^text/.*
+  mod_gzip_item_include mime ^application/x-javascript.*
+  mod_gzip_item_exclude mime ^image/.*
+  mod_gzip_item_exclude rspheader ^Content-Encoding:.*gzip.*
+</IfModule>
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/plain
+  AddOutputFilterByType DEFLATE text/html
+  AddOutputFilterByType DEFLATE text/css
+  AddOutputFilterByType DEFLATE application/javascript
+  AddOutputFilterByType DEFLATE application/x-javascript
+</IfModule>
+
+# Handle Wordpress stuff
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.php$ - [L]
+
+  # Redirect non-www to www
+  RewriteCond %{HTTP_HOST} !^www\.example\.com
+  RewriteRule (.*) https://www.example.com/$1 [R=301,L]
+
+  # Redirect to SSL
+  RewriteCond %{SERVER_PORT} 80
+  RewriteRule ^(.*)$ https://www.example.com/$1 [R,L]
+
+  # Protect Wordpress Login
+  RewriteCond %{REQUEST_URI} ^(.*)?wp-login\.php(.*)$ [OR]
+  RewriteCond %{REQUEST_URI} ^(.*)?wp-admin$
+  RewriteCond %{REMOTE_ADDR} !^123\.123\.123\.123$
+  RewriteRule ^(.*)$ - [R=403,L]
+
+  # Handle robots.txt and sitemap.xml
+  RewriteRule ^sitemap.xml /sitemap.php?p=xml [L]
+  RewriteRule ^sitemap.xsl /sitemap.php?p=xsl [L]
+  RewriteRule ^sitemap.css /sitemap.php?p=css [L]
+  RewriteRule ^sitemap.js /sitemap.php?p=js [L]
+  RewriteRule ^robots.txt /sitemap.php?p=txt [L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.php [L]
+</IfModule>
+
+# BEGIN WordPress
+# END WordPress
